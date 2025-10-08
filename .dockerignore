@@ -1,0 +1,117 @@
+# .dockerignore - Archivos y directorios excluidos del contexto Docker
+# Optimiza el build excluyendo archivos innecesarios
+
+# ================================
+# ARCHIVOS PYTHON
+# ================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# ================================
+# ENTORNOS VIRTUALES
+# ================================
+venv/
+env/
+ENV/
+.venv/
+.env/
+
+# ================================
+# TESTING Y COVERAGE
+# ================================
+.pytest_cache/
+.coverage
+.coverage.*
+coverage.xml
+*.cover
+.hypothesis/
+htmlcov/
+.tox/
+
+# ================================
+# IDEs Y EDITORES
+# ================================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# ================================
+# CONTROL DE VERSIONES
+# ================================
+.git/
+.gitignore
+.gitattributes
+
+# ================================
+# LOGS Y TEMPORALES
+# ================================
+*.log
+logs/*.log
+*.tmp
+*.temp
+
+# ================================
+# ARCHIVOS GENERADOS
+# ================================
+constancias/*.pdf
+plantillas/*.xlsx
+autoridad_entrada/*.pdf
+seguimiento.xlsx
+
+# ================================
+# DOCKER Y CI/CD
+# ================================
+Dockerfile
+.dockerignore
+docker-compose.yml
+docker-compose.*.yml
+
+# ================================
+# GITHUB ACTIONS
+# ================================
+.github/
+
+# ================================
+# DOCUMENTACIÓN
+# ================================
+*.md
+docs/
+README*
+
+# ================================
+# CONFIGURACIÓN LOCAL
+# ================================
+.env
+.env.local
+.env.*.local
+config.local.py
+
+# ================================
+# ARCHIVOS DE SISTEMA
+# ================================
+*.pid
+*.seed
+*.pid.lock

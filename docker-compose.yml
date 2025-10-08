@@ -1,0 +1,88 @@
+# Docker Compose para Sistema RPA Universitario
+# Configuración para desarrollo local y testing
+
+services:
+  # ================================
+  # SERVICIO PRINCIPAL: RPA APP
+  # ================================
+  rpa-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: rpa-universitario
+    
+    # Mapeo de puertos
+    ports:
+      - "5000:5000"
+    
+    # Variables de entorno
+    environment:
+      - FLASK_ENV=development
+      - FLASK_DEBUG=1
+      - PYTHONUNBUFFERED=1
+      - PORT=5000
+      - CHROME_BIN=/usr/bin/chromium
+      - CHROMEDRIVER_PATH=/usr/bin/chromedriver
+    
+    # Volúmenes para persistencia de datos
+    volumes:
+      # Directorios de datos generados
+      - ./constancias:/app/constancias
+      - ./plantillas:/app/plantillas
+      - ./logs:/app/logs
+      - ./static/uploads:/app/static/uploads
+      - ./autoridad_entrada:/app/autoridad_entrada
+      
+      # Para desarrollo: sincronizar código fuente
+      - ./app.py:/app/app.py
+      - ./rpa_service.py:/app/rpa_service.py
+      - ./main.py:/app/main.py
+      - ./templates:/app/templates
+      - ./static:/app/static
+    
+    # Política de reinicio
+    restart: unless-stopped
+    
+    # Configuración de recursos
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    
+    # Healthcheck
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    
+    # Red personalizada
+    networks:
+      - rpa-network
+
+# ================================
+# REDES
+# ================================
+networks:
+  rpa-network:
+    driver: bridge
+    name: rpa-universitario-network
+
+# ================================
+# VOLÚMENES NOMBRADOS (OPCIONAL)
+# ================================
+volumes:
+  # Volumen para datos persistentes
+  rpa-data:
+    driver: local
+    name: rpa-universitario-data
+  
+  # Volumen para logs
+  rpa-logs:
+    driver: local
+    name: rpa-universitario-logs

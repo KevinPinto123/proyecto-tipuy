@@ -1,0 +1,196 @@
+# CI/CD Pipeline para Sistema RPA Universitario
+# Pipeline completo con tests, build, security scan y notificaciones
+
+name: "CI/CD Pipeline - RPA Universitario"
+
+# Triggers del workflow
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch: # Permite ejecución manual
+
+# Variables globales del workflow
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+  PYTHON_VERSION: 3.11
+
+jobs:
+  # ================================
+  # JOB 1: TESTS Y QUALITY
+  # ================================
+  tests-and-quality:
+    name: "🧪 Tests y Análisis de Calidad"
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: "📥 Checkout código"
+        uses: actions/checkout@v4
+
+      - name: "🐍 Setup Python ${{ env.PYTHON_VERSION }}"
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: "📦 Instalar dependencias"
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest pytest-cov flake8
+
+      - name: "🔍 Análisis de código con Flake8"
+        run: |
+          # Análisis de errores críticos y warnings
+          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+          flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+
+      - name: "🧪 Ejecutar tests con coverage"
+        run: |
+          pytest test_sistema.py -v --cov=. --cov-report=xml --cov-report=term-missing
+
+      - name: "📊 Upload coverage a Codecov"
+        uses: codecov/codecov-action@v3
+        continue-on-error: true
+        with:
+          file: ./coverage.xml
+          flags: unittests
+          name: codecov-umbrella
+
+  # ================================
+  # JOB 2: BUILD AND PUSH
+  # ================================
+  build-and-push:
+    name: "🐳 Build y Push Docker Image"
+    runs-on: ubuntu-latest
+    needs: tests-and-quality
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+
+    outputs:
+      image-digest: ${{ steps.build.outputs.digest }}
+      image-url: ${{ steps.build.outputs.image-url }}
+
+    steps:
+      - name: "📥 Checkout código"
+        uses: actions/checkout@v4
+
+      - name: "🔧 Setup Docker Buildx"
+        uses: docker/setup-buildx-action@v3
+
+      - name: "🔐 Login a GitHub Container Registry"
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: "🏷️ Generar metadata"
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: "🏗️ Build y Push imagen"
+        id: build
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          platforms: linux/amd64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # ================================
+  # JOB 3: SECURITY SCAN
+  # ================================
+  security-scan:
+    name: "🔒 Security Scan"
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    
+    permissions:
+      security-events: write
+
+    steps:
+      - name: "📥 Checkout código"
+        uses: actions/checkout@v4
+
+      - name: "🔍 Ejecutar Trivy vulnerability scanner"
+        uses: aquasecurity/trivy-action@master
+        continue-on-error: true
+        with:
+          image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+
+      - name: "📤 Upload Trivy scan results a GitHub Security"
+        uses: github/codeql-action/upload-sarif@v2
+        continue-on-error: true
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+  # ================================
+  # JOB 4: NOTIFICATIONS
+  # ================================
+  notifications:
+    name: "📢 Notificaciones y Resumen"
+    runs-on: ubuntu-latest
+    needs: [tests-and-quality, build-and-push, security-scan]
+    if: always()
+
+    steps:
+      - name: "📋 Generar resumen del pipeline"
+        run: |
+          echo "# 🎓 Pipeline CI/CD - Sistema RPA Universitario" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## 📊 Información del Build" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Actor:** ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Evento:** ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## 🚀 Estado de Jobs" >> $GITHUB_STEP_SUMMARY
+          echo "- **Tests y Quality:** ${{ needs.tests-and-quality.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Build y Push:** ${{ needs.build-and-push.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Security Scan:** ${{ needs.security-scan.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [[ "${{ needs.build-and-push.result }}" == "success" ]]; then
+            echo "## 📦 Imagen Docker" >> $GITHUB_STEP_SUMMARY
+            echo "- **Registry:** ${{ env.REGISTRY }}" >> $GITHUB_STEP_SUMMARY
+            echo "- **Imagen:** ${{ env.IMAGE_NAME }}" >> $GITHUB_STEP_SUMMARY
+            echo "- **Tag:** latest" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### 🚀 Comandos para usar la imagen:" >> $GITHUB_STEP_SUMMARY
+            echo '```bash' >> $GITHUB_STEP_SUMMARY
+            echo "docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest" >> $GITHUB_STEP_SUMMARY
+            echo "docker run -p 5000:5000 ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "---" >> $GITHUB_STEP_SUMMARY
+          echo "*Pipeline ejecutado el $(date)*" >> $GITHUB_STEP_SUMMARY
+
+      - name: "✅ Pipeline completado"
+        run: |
+          if [[ "${{ needs.tests-and-quality.result }}" == "success" ]]; then
+            echo "✅ Tests pasaron correctamente"
+          else
+            echo "❌ Tests fallaron"
+            exit 1
+          fi

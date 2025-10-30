@@ -1,178 +1,268 @@
-# 🎓 Sistema Universitario RPA
+# Sistema RPA Universitario - TIPUY 🎓
 
-Sistema web completo que simula procesos universitarios automatizados con RPA, incluyendo generación de constancias académicas, seguimiento administrativo y simulación de firmas digitales.
+Sistema automatizado de gestión de trámites académicos para la Facultad de Ingeniería Eléctrica y Electrónica (FIEE) de la Universidad Nacional de Ingeniería (UNI).
 
-## 🚀 Características
+## 🚀 Características Principales
 
-- **Generación Automatizada**: Constancias académicas en PDF con RPA
-- **Seguimiento en Tiempo Real**: Panel web para monitorear el estado de documentos
-- **Simulación de Autoridades**: Proceso de firma digital automatizado
-- **Integración Completa**: Excel + PDF + Web + RPA en un solo sistema
+### ✨ Funcionalidades Implementadas
 
-## 🛠️ Tecnologías Utilizadas
+- **🤖 Asistente Virtual TIPUY**: Chat inteligente para consultas académicas
+- **🔐 Autenticación Segura**: Sistema de login con Supabase (modo demo disponible)
+- **📄 Generación Automática**: Constancias de matrícula con validación completa
+- **🆔 Validación DNI**: Verificación de documentos de identidad
+- **🎓 Validación UNI**: Verificación de códigos estudiantiles en portal institucional
+- **📊 Dashboard Moderno**: Interfaz intuitiva con navegación fluida
+- **📱 Diseño Responsivo**: Compatible con dispositivos móviles
+- **🔒 Seguridad**: Cifrado extremo a extremo y validaciones robustas
 
-- **Backend**: Flask (Python)
-- **RPA**: rpaframework + Selenium
-- **PDF**: reportlab
-- **Excel**: openpyxl
-- **Frontend**: HTML5 + Bootstrap + JavaScript
-- **Automatización**: Navegador Chrome automatizado
+### 🛠️ Tecnologías Utilizadas
 
-## 📋 Requisitos Previos
-
-- Python 3.13+
-- Google Chrome instalado
-- Conexión a internet (para descargar ChromeDriver automáticamente)
-
-## ⚡ Instalación Rápida
-
-1. **Clonar o descargar el proyecto**
-```bash
-cd sistema-universitario-rpa
-```
-
-2. **Instalar dependencias**
-```bash
-pip install -r requirements.txt
-```
-
-3. **Ejecutar el sistema**
-```bash
-python app.py
-```
-
-4. **Abrir en navegador**
-```
-http://localhost:5000
-```
-
-## 🎯 Cómo Usar el Sistema
-
-### 1. Generar Constancia
-- Llenar el formulario con datos del estudiante
-- Hacer clic en "Generar Constancia con RPA"
-- Observar los logs en tiempo real del proceso RPA
-- El sistema automáticamente:
-  - Abre navegador Chrome
-  - Genera PDF de constancia
-  - Guarda en carpeta `autoridad_entrada/`
-  - Registra en Excel `seguimiento.xlsx`
-
-### 2. Seguimiento de Constancias
-- Ver tabla con todas las constancias generadas
-- Estados: "Enviado" → "Firmado y Aprobado"
-- Firmas: "Pendiente" → "Firmado"
-
-### 3. Simular Firma Digital
-- Hacer clic en botón "Firmar" de cualquier constancia pendiente
-- El sistema actualiza automáticamente el estado en Excel
+- **Backend**: Python Flask
+- **Frontend**: HTML5, CSS3, JavaScript (Vanilla)
+- **Base de Datos**: Supabase (PostgreSQL)
+- **Automatización**: Selenium WebDriver
+- **Autenticación**: Supabase Auth
+- **Estilos**: Bootstrap 5 + CSS personalizado
+- **Iconos**: Font Awesome 6
 
 ## 📁 Estructura del Proyecto
 
 ```
-sistema-universitario-rpa/
-├── app.py                 # Servidor Flask principal
-├── rpa_service.py         # Lógica RPA y automatización
-├── requirements.txt       # Dependencias Python
+proyecto/
+├── app.py                      # Aplicación Flask principal
+├── rpa_service.py             # Servicio de automatización RPA
+├── uni_validation_service.py   # Validación portal UNI
+├── dni_validation_service.py   # Validación DNI
+├── test_sistema.py            # Script de pruebas
+├── README.md                  # Documentación
 ├── templates/
-│   └── index.html        # Interfaz web principal
+│   ├── auth.html             # Página de autenticación
+│   ├── dashboard.html        # Dashboard principal
+│   ├── chat.html            # Interfaz de chat
+│   └── configuracion.html   # Página de configuración
 ├── static/
-│   └── app.js           # JavaScript frontend
-├── autoridad_entrada/    # PDFs generados (se crea automáticamente)
-├── seguimiento.xlsx      # Excel de seguimiento (se crea automáticamente)
-└── README.md            # Este archivo
+│   ├── dashboard.css        # Estilos principales
+│   ├── dashboard.js         # Lógica del dashboard
+│   ├── demo-config.js       # Configuración demo
+│   └── demo-data.js         # Datos de demostración
+└── autoridad_entrada/        # Carpeta para PDFs generados
 ```
 
-## 🔄 Flujo RPA Completo
+## 🚀 Instalación y Configuración
 
-1. **Entrada**: Datos del estudiante desde formulario web
-2. **Automatización**: 
-   - Abre navegador Chrome
-   - Realiza búsqueda demo en Google
-   - Cierra navegador
-3. **Generación PDF**: Constancia académica con datos oficiales
-4. **Almacenamiento**: PDF en carpeta de autoridades
-5. **Registro**: Entrada en Excel con estado y metadatos
-6. **Respuesta**: Confirmación en interfaz web
+### 1. Requisitos Previos
 
-## 📊 Logs del Sistema
+```bash
+# Python 3.8 o superior
+python --version
 
-El sistema muestra logs detallados en consola y web:
-
-```
-✅ Navegador abierto correctamente
-✅ Búsqueda de constancia académica realizada  
-✅ Navegador cerrado correctamente
-✅ PDF generado: constancia_20241001_143022.pdf
-✅ Constancia enviada a autoridad
-✅ Seguimiento actualizado en Excel
-✅ Flujo RPA completado exitosamente
+# Instalar dependencias
+pip install flask flask-cors selenium requests beautifulsoup4 reportlab
 ```
 
-## 🎨 Interfaz Web
+### 2. Configuración del Navegador
 
-- **Diseño Responsivo**: Bootstrap 5 + Font Awesome
-- **Tiempo Real**: Logs de RPA en vivo
-- **Estadísticas**: Contadores automáticos
-- **UX Intuitiva**: Notificaciones y estados visuales
-
-## 🔧 Personalización
-
-### Modificar Carreras
-Editar en `templates/index.html` líneas 45-51:
-```html
-<option value="Tu Nueva Carrera">Tu Nueva Carrera</option>
+```bash
+# Descargar ChromeDriver desde:
+# https://chromedriver.chromium.org/
+# Colocar en PATH del sistema
 ```
 
-### Cambiar Formato PDF
-Modificar método `_generar_pdf_constancia()` en `rpa_service.py`
+### 3. Configuración de Supabase (Opcional)
 
-### Agregar Campos Excel
-Actualizar headers en método `_inicializar_excel()` en `rpa_service.py`
-
-## 🚨 Solución de Problemas
-
-### Error de ChromeDriver
-- El sistema descarga ChromeDriver automáticamente
-- Si falla, verificar conexión a internet
-
-### Error de Permisos Excel
-- Cerrar Excel si está abierto
-- Verificar permisos de escritura en carpeta
-
-### Puerto 5000 Ocupado
-Cambiar puerto en `app.py`:
-```python
-app.run(debug=True, port=5001)  # Usar puerto 5001
+```javascript
+// En static/demo-config.js
+const supabaseUrl = 'TU_SUPABASE_URL';
+const supabaseKey = 'TU_SUPABASE_ANON_KEY';
 ```
 
-## 📈 Demostración para Profesores
+### 4. Ejecutar la Aplicación
 
-Este sistema demuestra:
+```bash
+# Iniciar servidor
+python app.py
 
-1. **Integración RPA-Web**: Automatización backend con interfaz moderna
-2. **Flujo Completo**: Desde formulario hasta documento firmado
-3. **Tecnologías Actuales**: Python, Flask, Selenium, Bootstrap
-4. **Casos de Uso Reales**: Procesos universitarios automatizados
-5. **Escalabilidad**: Base para sistemas más complejos
+# La aplicación estará disponible en:
+# http://localhost:5000
+```
 
-## 🎓 Casos de Uso Universitarios
+## 🎯 Uso del Sistema
 
-- Constancias de estudios
-- Certificados de notas
-- Solicitudes de documentos
-- Procesos de matrícula
-- Seguimiento administrativo
-- Firmas digitales institucionales
+### 1. Autenticación
+
+- **Modo Demo**: Usar credenciales de prueba
+- **Modo Producción**: Login con Supabase
+
+### 2. Dashboard Principal
+
+- **Chat TIPUY**: Asistente virtual para consultas
+- **Trámites**: Gestión de solicitudes
+- **Configuración**: Validación DNI + UNI
+- **Notificaciones**: Estado de trámites
+
+### 3. Generación de Constancias
+
+1. Ir a **Configuración**
+2. Completar datos personales
+3. **Validar DNI** con RENIEC
+4. **Validar Código UNI** en portal institucional
+5. Seleccionar carrera y ciclo
+6. **Generar Constancia** automáticamente
+
+### 4. Chat con TIPUY
+
+- Consultas en lenguaje natural
+- Acciones rápidas predefinidas
+- Respuestas contextuales inteligentes
+
+## 🔧 API Endpoints
+
+### Autenticación
+- `GET /` - Redirección a auth
+- `GET /auth` - Página de login
+- `GET /dashboard` - Dashboard principal
+
+### Validaciones
+- `POST /api/validar-dni` - Validar DNI en RENIEC
+- `POST /api/validar-estudiante` - Validar en portal UNI
+- `POST /api/validar-uni` - Validación UNI alternativa
+
+### Constancias
+- `POST /api/generar-constancia` - Generar constancia
+- `GET /api/obtener-seguimiento` - Listar constancias
+- `GET /api/descargar-constancia/<id>` - Descargar PDF
+- `DELETE /api/eliminar-constancia` - Eliminar constancia
+
+### Contenido
+- `GET /api/chat` - Contenido del chat
+- `GET /api/configuracion-page` - Página de configuración
+
+## 🧪 Pruebas
+
+```bash
+# Ejecutar pruebas automatizadas
+python test_sistema.py
+
+# Verificar endpoints manualmente
+curl http://localhost:5000/api/obtener-seguimiento
+```
+
+## 🔒 Seguridad
+
+### Validaciones Implementadas
+
+- **DNI**: Verificación con RENIEC
+- **Código UNI**: Validación en portal institucional
+- **Correo**: Verificación dominio @uni.pe
+- **Datos**: Sanitización de inputs
+- **Archivos**: Validación de tipos y tamaños
+
+### Medidas de Seguridad
+
+- Cifrado de comunicaciones
+- Validación de sesiones
+- Sanitización de datos
+- Rate limiting (recomendado)
+- Logs de auditoría
+
+## 📊 Datos de Demostración
+
+### Estudiantes de Prueba
+
+| Código    | Nombre                    | DNI      | Carrera                |
+|-----------|---------------------------|----------|------------------------|
+| 20210001A | Juan Carlos Pérez         | 12345678 | Ingeniería Eléctrica   |
+| 20210002B | María García López        | 87654321 | Ingeniería Electrónica |
+| 20220259H | Kevin Eduardo Pinto       | 77804421 | Ing. Telecomunicaciones|
+| 20230001C | Ana Sofía Mendoza         | 11223344 | Ing. Ciberseguridad    |
+
+## 🚀 Despliegue en Producción
+
+### 1. Configuración del Servidor
+
+```bash
+# Usar servidor WSGI como Gunicorn
+pip install gunicorn
+
+# Ejecutar en producción
+gunicorn -w 4 -b 0.0.0.0:5000 app:app
+```
+
+### 2. Variables de Entorno
+
+```bash
+export FLASK_ENV=production
+export SUPABASE_URL=tu_url_real
+export SUPABASE_KEY=tu_key_real
+```
+
+### 3. Nginx (Opcional)
+
+```nginx
+server {
+    listen 80;
+    server_name tu-dominio.com;
+    
+    location / {
+        proxy_pass http://127.0.0.1:5000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+}
+```
+
+## 🐛 Solución de Problemas
+
+### Errores Comunes
+
+1. **ChromeDriver no encontrado**
+   ```bash
+   # Descargar y agregar al PATH
+   export PATH=$PATH:/ruta/a/chromedriver
+   ```
+
+2. **Error de conexión Supabase**
+   ```javascript
+   // Verificar credenciales en demo-config.js
+   // Usar modo demo si es necesario
+   ```
+
+3. **Puerto 5000 ocupado**
+   ```bash
+   # Cambiar puerto en app.py
+   app.run(debug=True, port=5001)
+   ```
+
+## 📈 Roadmap Futuro
+
+- [ ] Integración con más servicios UNI
+- [ ] Notificaciones push
+- [ ] Firma digital avanzada
+- [ ] API REST completa
+- [ ] Aplicación móvil
+- [ ] Análisis de datos
+- [ ] Inteligencia artificial mejorada
+
+## 👥 Contribución
+
+1. Fork del repositorio
+2. Crear rama feature (`git checkout -b feature/nueva-funcionalidad`)
+3. Commit cambios (`git commit -am 'Agregar nueva funcionalidad'`)
+4. Push a la rama (`git push origin feature/nueva-funcionalidad`)
+5. Crear Pull Request
+
+## 📄 Licencia
+
+Este proyecto está bajo la Licencia MIT. Ver `LICENSE` para más detalles.
 
 ## 📞 Soporte
 
-Para dudas o mejoras, revisar:
-- Logs en consola del servidor
-- Archivo `seguimiento.xlsx` generado
-- PDFs en carpeta `autoridad_entrada/`
-- Código comentado en `rpa_service.py`
+- **Email**: soporte@tipuy.uni.pe
+- **Documentación**: [Wiki del proyecto]
+- **Issues**: [GitHub Issues]
 
 ---
 
-**Desarrollado con ❤️ para demostrar el poder de RPA en procesos universitarios**
+**TIPUY** - *Transformando la gestión académica con inteligencia artificial* 🎓✨
+
+Desarrollado con ❤️ para la comunidad UNI

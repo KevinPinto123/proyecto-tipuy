@@ -13,10 +13,16 @@ import openpyxl
 from openpyxl import Workbook
 import time
 
+# Importar servicios de validación
+from uni_validation_service import UNIValidationService
+from dni_validation_service import DNIValidationService
+
 class RPAService:
     def __init__(self):
         self.excel_file = "seguimiento.xlsx"
         self.pdf_folder = "autoridad_entrada"
+        self.uni_validator = UNIValidationService()
+        self.dni_validator = DNIValidationService()
         self._inicializar_excel()
     
     def _inicializar_excel(self):
@@ -26,32 +32,70 @@ class RPAService:
             ws = wb.active
             ws.title = "Seguimiento_Constancias"
             
-            # Encabezados
-            headers = ["ID", "Alumno", "Codigo", "Carrera", "Ciclo", 
-                      "Documento", "Estado", "Autoridad", "Firma", "Fecha_Creacion"]
+            # Encabezados extendidos con validación completa
+            headers = ["ID", "Alumno", "Codigo", "DNI", "Correo", "Carrera", "Ciclo", 
+                      "Documento", "Estado", "Autoridad", "Firma", "Fecha_Creacion",
+                      "Validado_UNI", "Validado_DNI", "Fuente_Datos", "Facultad", "Estado_UNI"]
             ws.append(headers)
             
             wb.save(self.excel_file)
             print("✅ Archivo de seguimiento Excel creado")
     
-    def generar_constancia_completa(self, nombre, codigo, carrera, ciclo):
-        """Flujo RPA completo para generar constancia"""
+    def generar_constancia_completa(self, nombre, codigo, carrera, ciclo, dni=None, correo=None):
+        """Flujo RPA completo para generar constancia con validación DNI + UNI"""
         print(f"🔄 Iniciando flujo RPA para {nombre}...")
         
-        # 1. Abrir navegador (simulación)
+        # 1. VALIDAR DNI (si se proporciona)
+        validacion_dni = None
+        if dni:
+            print("🆔 Validando DNI...")
+            validacion_dni = self._validar_dni(dni)
+            if not validacion_dni.get('success'):
+                print(f"⚠️ DNI no validado: {validacion_dni.get('error')}")
+                # Continuar sin DNI (opcional)
+        
+        # 2. VALIDAR ESTUDIANTE EN PORTAL UNI
+        print("🎓 Validando estudiante en portal UNI...")
+        validacion_uni = self._validar_estudiante_uni(codigo, nombre)
+        
+        if not validacion_uni.get('success'):
+            print(f"❌ Estudiante no validado en UNI: {validacion_uni.get('error')}")
+            return {
+                'success': False,
+                'error': f"Estudiante no encontrado en portal UNI: {validacion_uni.get('error')}",
+                'validacion_uni': validacion_uni,
+                'validacion_dni': validacion_dni
+            }
+        
+        print(f"✅ Estudiante validado en UNI: {validacion_uni.get('nombre')}")
+        
+        # 3. Validar correo institucional
+        if correo and not self._validar_correo_uni(correo):
+            print(f"⚠️ Correo no es institucional: {correo}")
+        
+        # Usar datos validados (más confiables)
+        datos_validados = self._combinar_datos_validados_completo(
+            nombre, codigo, carrera, ciclo, dni, correo, validacion_uni, validacion_dni
+        )
+        
+        # 4. Ejecutar navegador demo (opcional)
         self._ejecutar_navegador_demo()
         
-        # 2. Generar PDF
-        archivo_pdf = self._generar_pdf_constancia(nombre, codigo, carrera, ciclo)
+        # 5. Generar PDF con datos validados
+        archivo_pdf = self._generar_pdf_constancia_completo(datos_validados)
         
-        # 3. Registrar en Excel
-        registro_id = self._registrar_en_excel(nombre, codigo, carrera, ciclo, archivo_pdf)
+        # 6. Registrar en Excel con información completa de validación
+        registro_id = self._registrar_en_excel_completo(datos_validados, archivo_pdf, validacion_uni, validacion_dni)
         
-        print("✅ Flujo RPA completado exitosamente")
+        print("✅ Flujo RPA completado exitosamente con validación completa")
         
         return {
+            'success': True,
             'archivo_pdf': archivo_pdf,
-            'registro_id': registro_id
+            'registro_id': registro_id,
+            'datos_validados': datos_validados,
+            'validacion_uni': validacion_uni,
+            'validacion_dni': validacion_dni
         }
     
     def _ejecutar_navegador_demo(self):
@@ -176,6 +220,240 @@ class RPAService:
             
         except Exception as e:
             print(f"❌ Error al registrar en Excel: {e}")
+            raise
+    
+    def _validar_estudiante_uni(self, codigo, nombre):
+        """Validar estudiante en portal UNI"""
+        try:
+            return self.uni_validator.validar_estudiante_uni(codigo, nombre)
+        except Exception as e:
+            print(f"⚠️ Error validando en UNI: {e}")
+            return {
+                'success': False,
+                'error': str(e),
+                'codigo_buscado': codigo
+            }
+    
+    def _combinar_datos_validados(self, nombre_input, codigo_input, carrera_input, ciclo_input, validacion_uni):
+        """Combinar datos de entrada con datos validados de UNI"""
+        datos_combinados = {
+            'nombre': nombre_input,
+            'codigo': codigo_input,
+            'carrera': carrera_input,
+            'ciclo': ciclo_input,
+            'fuente': 'input_usuario'
+        }
+        
+        # Si la validación UNI fue exitosa, usar esos datos como prioritarios
+        if validacion_uni.get('success'):
+            if validacion_uni.get('nombre'):
+                datos_combinados['nombre'] = validacion_uni['nombre']
+                datos_combinados['fuente'] = 'uni_validado'
+            
+            if validacion_uni.get('carrera'):
+                datos_combinados['carrera'] = validacion_uni['carrera']
+            
+            if validacion_uni.get('facultad'):
+                datos_combinados['facultad'] = validacion_uni['facultad']
+            
+            datos_combinados['estado_uni'] = validacion_uni.get('estado', 'Activo')
+            datos_combinados['validado_uni'] = True
+        else:
+            datos_combinados['validado_uni'] = False
+            datos_combinados['error_validacion'] = validacion_uni.get('error')
+        
+        return datos_combinados
+    
+    def _registrar_en_excel_validado(self, datos_validados, archivo_pdf, validacion_uni):
+        """Registrar en Excel con información de validación UNI"""
+        try:
+            wb = openpyxl.load_workbook(self.excel_file)
+            ws = wb.active
+            
+            # Generar ID único
+            registro_id = str(uuid.uuid4())[:8]
+            
+            # Agregar nueva fila con información extendida
+            nueva_fila = [
+                registro_id,
+                datos_validados['nombre'],
+                datos_validados['codigo'],
+                datos_validados['carrera'],
+                datos_validados['ciclo'],
+                archivo_pdf,
+                "Enviado",
+                "Coordinador Académico",
+                "Pendiente",
+                datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                # Nuevas columnas para validación UNI
+                "SÍ" if datos_validados.get('validado_uni') else "NO",
+                datos_validados.get('fuente', 'input_usuario'),
+                datos_validados.get('facultad', ''),
+                datos_validados.get('estado_uni', ''),
+                validacion_uni.get('coincidencia_nombres', 100) if validacion_uni.get('success') else 0
+            ]
+            
+            ws.append(nueva_fila)
+            wb.save(self.excel_file)
+            
+            print("✅ Constancia enviada a autoridad")
+            print("✅ Seguimiento actualizado en Excel con validación UNI")
+            
+            return registro_id
+            
+        except Exception as e:
+            print(f"❌ Error al registrar en Excel validado: {e}")
+            raise
+    
+    def _validar_dni(self, dni):
+        """Validar DNI"""
+        try:
+            return self.dni_validator.validar_dni(dni)
+        except Exception as e:
+            print(f"⚠️ Error validando DNI: {e}")
+            return {
+                'success': False,
+                'error': str(e),
+                'dni_buscado': dni
+            }
+    
+    def _validar_correo_uni(self, correo):
+        """Validar que el correo sea institucional @uni.pe"""
+        if not correo:
+            return False
+        return correo.lower().endswith('@uni.pe')
+    
+    def _combinar_datos_validados_completo(self, nombre, codigo, carrera, ciclo, dni, correo, validacion_uni, validacion_dni):
+        """Combinar todos los datos validados"""
+        datos_combinados = {
+            'nombre': nombre,
+            'codigo': codigo,
+            'dni': dni or '',
+            'correo': correo or '',
+            'carrera': carrera,
+            'ciclo': ciclo,
+            'fuente': 'input_usuario'
+        }
+        
+        # Priorizar datos de UNI si están disponibles
+        if validacion_uni and validacion_uni.get('success'):
+            if validacion_uni.get('nombre'):
+                datos_combinados['nombre'] = validacion_uni['nombre']
+                datos_combinados['fuente'] = 'uni_validado'
+            
+            if validacion_uni.get('carrera'):
+                datos_combinados['carrera'] = validacion_uni['carrera']
+            
+            datos_combinados['validado_uni'] = True
+            datos_combinados['estado_uni'] = validacion_uni.get('estado', 'Activo')
+            datos_combinados['facultad'] = validacion_uni.get('facultad', '')
+        else:
+            datos_combinados['validado_uni'] = False
+        
+        # Usar datos de DNI si están disponibles
+        if validacion_dni and validacion_dni.get('success'):
+            if validacion_dni.get('nombre_completo'):
+                # Solo usar DNI si no hay datos de UNI
+                if not datos_combinados.get('validado_uni'):
+                    datos_combinados['nombre'] = validacion_dni['nombre_completo']
+                    datos_combinados['fuente'] = 'dni_validado'
+            
+            datos_combinados['validado_dni'] = True
+            datos_combinados['nombre_dni'] = validacion_dni.get('nombre_completo', '')
+        else:
+            datos_combinados['validado_dni'] = False
+        
+        return datos_combinados
+    
+    def _generar_pdf_constancia_completo(self, datos_validados):
+        """Generar PDF con datos completos validados"""
+        # Usar el método existente pero con datos mejorados
+        return self._generar_pdf_constancia(
+            datos_validados['nombre'],
+            datos_validados['codigo'],
+            datos_validados['carrera'],
+            datos_validados['ciclo']
+        )
+    
+    def _registrar_en_excel_completo(self, datos_validados, archivo_pdf, validacion_uni, validacion_dni):
+        """Registrar en Excel con información completa"""
+        try:
+            wb = openpyxl.load_workbook(self.excel_file)
+            ws = wb.active
+            
+            # Generar ID único
+            registro_id = str(uuid.uuid4())[:8]
+            
+            # Agregar nueva fila con información completa
+            nueva_fila = [
+                registro_id,
+                datos_validados['nombre'],
+                datos_validados['codigo'],
+                datos_validados.get('dni', ''),
+                datos_validados.get('correo', ''),
+                datos_validados['carrera'],
+                datos_validados['ciclo'],
+                archivo_pdf,
+                "Enviado",
+                "Coordinador Académico",
+                "Pendiente",
+                datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                # Nuevas columnas de validación
+                "SÍ" if datos_validados.get('validado_uni') else "NO",
+                "SÍ" if datos_validados.get('validado_dni') else "NO",
+                datos_validados.get('fuente', 'input_usuario'),
+                datos_validados.get('facultad', ''),
+                datos_validados.get('estado_uni', '')
+            ]
+            
+            ws.append(nueva_fila)
+            wb.save(self.excel_file)
+            
+            print("✅ Constancia enviada a autoridad")
+            print("✅ Seguimiento actualizado en Excel con validación completa")
+            
+            return registro_id
+            
+        except Exception as e:
+            print(f"❌ Error al registrar en Excel completo: {e}")
+            raise
+    
+    def eliminar_constancia(self, registro_id):
+        """Eliminar constancia del seguimiento y archivo PDF"""
+        try:
+            wb = openpyxl.load_workbook(self.excel_file)
+            ws = wb.active
+            
+            # Buscar y eliminar registro
+            fila_a_eliminar = None
+            archivo_pdf = None
+            
+            for row_num, row in enumerate(ws.iter_rows(min_row=2), start=2):
+                if row[0].value == registro_id:
+                    fila_a_eliminar = row_num
+                    archivo_pdf = row[7].value if len(row) > 7 else None  # Columna Documento
+                    break
+            
+            if fila_a_eliminar:
+                # Eliminar fila del Excel
+                ws.delete_rows(fila_a_eliminar)
+                wb.save(self.excel_file)
+                
+                # Eliminar archivo PDF si existe
+                if archivo_pdf:
+                    pdf_path = os.path.join(self.pdf_folder, archivo_pdf)
+                    if os.path.exists(pdf_path):
+                        os.remove(pdf_path)
+                        print(f"✅ Archivo PDF eliminado: {archivo_pdf}")
+                
+                print(f"✅ Constancia eliminada: {registro_id}")
+                return True
+            else:
+                print(f"❌ Constancia no encontrada: {registro_id}")
+                return False
+                
+        except Exception as e:
+            print(f"❌ Error eliminando constancia: {e}")
             raise
     
     def obtener_seguimiento(self):

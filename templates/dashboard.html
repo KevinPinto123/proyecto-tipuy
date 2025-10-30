@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - TIPUY UNI</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='dashboard.css') }}" rel="stylesheet">
+    <script src="{{ url_for('static', filename='demo-data.js') }}"></script>
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">
+                <i class="fas fa-robot"></i>
+            </div>
+            <div class="app-info">
+                <h5>TIPUY</h5>
+                <small>Asistente Virtual</small>
+            </div>
+        </div>
+
+        <div class="sidebar-section">
+            <h6>Navegación Principal</h6>
+        </div>
+
+        <nav class="sidebar-nav">
+            <a href="#" class="nav-item active" data-page="chat">
+                <i class="fas fa-comments"></i>
+                <span>Chat TIPUY</span>
+            </a>
+            <a href="#" class="nav-item" data-page="dashboard-home">
+                <i class="fas fa-tachometer-alt"></i>
+                <span>Dashboard</span>
+            </a>
+            <a href="#" class="nav-item" data-page="tramites">
+                <i class="fas fa-file-alt"></i>
+                <span>Trámites</span>
+            </a>
+            <a href="#" class="nav-item" data-page="notificaciones">
+                <i class="fas fa-bell"></i>
+                <span>Notificaciones</span>
+                <span class="badge">2</span>
+            </a>
+            <a href="#" class="nav-item" data-page="configuracion">
+                <i class="fas fa-cog"></i>
+                <span>Configuración</span>
+            </a>
+        </nav>
+
+        <div class="connection-status">
+            <div class="status-indicator"></div>
+            <div class="status-text">
+                <small>Conexión Segura</small>
+                <div>SSO UNI Activo</div>
+            </div>
+        </div>
+
+        <div class="user-profile">
+            <div class="user-avatar">
+                <span id="userInitials">KP</span>
+            </div>
+            <div class="user-info">
+                <div class="user-name" id="userName">Kevin Pinto</div>
+                <div class="user-role">Estudiante</div>
+            </div>
+            <button class="logout-btn" onclick="logout()">
+                <i class="fas fa-sign-out-alt"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Header -->
+        <header class="main-header">
+            <div class="header-left">
+                <button class="sidebar-toggle" onclick="toggleSidebar()">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <div class="search-container">
+                    <i class="fas fa-search"></i>
+                    <input type="text" placeholder="Buscar trámite o consulta...">
+                </div>
+            </div>
+            <div class="header-right">
+                <div class="system-status">
+                    <span class="status-dot"></span>
+                    <span>Sistema Disponible</span>
+                    <span class="status-percentage">99.9%</span>
+                </div>
+                <div class="notifications-icon">
+                    <i class="fas fa-bell"></i>
+                    <span class="notification-count">3</span>
+                </div>
+                <div class="user-menu">
+                    <i class="fas fa-user-circle"></i>
+                    <span>Recursos</span>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+            </div>
+        </header>
+
+        <!-- Page Content -->
+        <div class="page-content" id="pageContent">
+            <!-- Chat TIPUY (Default) -->
+            <div class="page" id="chat-page" style="display: block;">
+                <!-- Chat content will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="{{ url_for('static', filename='demo-config.js') }}"></script>
+    <script src="{{ url_for('static', filename='dashboard.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,635 @@
+<!-- Página de Configuración -->
+<div class="configuracion-page">
+    <div class="page-header">
+        <div class="header-icon">
+            <i class="fas fa-cog"></i>
+        </div>
+        <div class="header-content">
+            <h2>Configuración</h2>
+            <p>Personaliza tu experiencia con TIPUY</p>
+        </div>
+    </div>
+
+    <!-- Información Personal -->
+    <div class="config-section">
+        <div class="section-header">
+            <div class="section-icon">
+                <i class="fas fa-user"></i>
+            </div>
+            <div class="section-info">
+                <h4>Información Personal</h4>
+                <p>Actualiza tu información de perfil. Los campos marcados deben ser validados.</p>
+            </div>
+        </div>
+
+        <div class="config-form">
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Nombres *</label>
+                    <input type="text" class="form-control" id="configNombres" placeholder="Kevin Eduardo" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Apellidos *</label>
+                    <input type="text" class="form-control" id="configApellidos" placeholder="Pinto Acevedo" required>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Código de Estudiante *</label>
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="configCodigo" placeholder="20220259H" required>
+                        <button type="button" class="btn btn-outline-primary" onclick="validarCodigoConfig()">
+                            <i class="fas fa-search"></i> Validar UNI
+                        </button>
+                    </div>
+                    <div id="validacionCodigoConfig" class="validation-feedback"></div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">DNI *</label>
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="configDNI" placeholder="77804421" maxlength="8" required>
+                        <button type="button" class="btn btn-outline-info" onclick="validarDNIConfig()">
+                            <i class="fas fa-id-card"></i> Validar DNI
+                        </button>
+                    </div>
+                    <div id="validacionDNIConfig" class="validation-feedback"></div>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Teléfono *</label>
+                    <input type="tel" class="form-control" id="configTelefono" placeholder="925120944" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Correo Electrónico</label>
+                    <input type="email" class="form-control" id="configCorreo" placeholder="kevin.pinto@uni.pe" readonly>
+                    <small class="form-text">El correo no se puede modificar</small>
+                </div>
+            </div>
+
+            <div class="validation-status">
+                <div class="status-item" id="statusUNI">
+                    <i class="fas fa-times-circle text-danger"></i>
+                    <span>Estudiante Validado</span>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="button" class="btn btn-primary" onclick="guardarConfiguracion()">
+                    <i class="fas fa-save"></i>
+                    Guardar Cambios
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Generador de Constancias -->
+    <div class="config-section">
+        <div class="section-header">
+            <div class="section-icon">
+                <i class="fas fa-file-alt"></i>
+            </div>
+            <div class="section-info">
+                <h4>Generador de Constancias</h4>
+                <p>Genera constancias automáticamente con validación institucional</p>
+            </div>
+        </div>
+
+        <div class="generator-form">
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Carrera</label>
+                    <select class="form-control" id="generatorCarrera" required>
+                        <option value="">Seleccionar carrera</option>
+                        <option value="Ingeniería Eléctrica">Ingeniería Eléctrica</option>
+                        <option value="Ingeniería Electrónica">Ingeniería Electrónica</option>
+                        <option value="Ingeniería de Telecomunicaciones">Ingeniería de Telecomunicaciones</option>
+                        <option value="Ingeniería de Ciberseguridad">Ingeniería de Ciberseguridad</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Ciclo Académico</label>
+                    <select class="form-control" id="generatorCiclo" required>
+                        <option value="">Seleccionar ciclo</option>
+                        <option value="2021-1">2021-1</option>
+                        <option value="2021-2">2021-2</option>
+                        <option value="2022-1">2022-1</option>
+                        <option value="2022-2">2022-2</option>
+                        <option value="2023-1">2023-1</option>
+                        <option value="2023-2">2023-2</option>
+                        <option value="2024-1">2024-1</option>
+                        <option value="2024-2">2024-2</option>
+                        <option value="2025-1">2025-1</option>
+                        <option value="2025-2">2025-2</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="generator-actions">
+                <button type="button" class="btn btn-warning" onclick="validarCompleto()" id="btnValidarCompleto">
+                    <i class="fas fa-shield-alt"></i>
+                    Validar DNI + UNI Completo
+                </button>
+                <button type="button" class="btn btn-success" onclick="generarConstanciaConfig()" id="btnGenerarConstancia" disabled>
+                    <i class="fas fa-cog"></i>
+                    Generar Constancia con RPA
+                </button>
+            </div>
+
+            <div class="generator-status" id="generatorStatus">
+                <small class="text-muted">* Primero valida DNI y estudiante en portal UNI</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Historial de Constancias -->
+    <div class="config-section">
+        <div class="section-header">
+            <div class="section-icon">
+                <i class="fas fa-history"></i>
+            </div>
+            <div class="section-info">
+                <h4>Mis Constancias</h4>
+                <p>Historial y descarga de constancias generadas</p>
+            </div>
+            <button class="btn btn-outline-primary btn-sm" onclick="cargarConstancias()">
+                <i class="fas fa-sync"></i>
+                Actualizar
+            </button>
+        </div>
+
+        <div class="constancias-list" id="constanciasList">
+            <div class="loading-state">
+                <i class="fas fa-spinner fa-spin"></i>
+                <span>Cargando constancias...</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.configuracion-page {
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.page-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 32px;
+    padding: 24px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.header-icon {
+    width: 48px;
+    height: 48px;
+    background: var(--uni-light-blue);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 20px;
+}
+
+.header-content h2 {
+    margin: 0;
+    color: #1f2937;
+    font-weight: 700;
+}
+
+.header-content p {
+    margin: 4px 0 0;
+    color: #6b7280;
+}
+
+.config-section {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    margin-bottom: 24px;
+    overflow: hidden;
+}
+
+.section-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 24px;
+    border-bottom: 1px solid var(--uni-border);
+    background: var(--uni-gray);
+}
+
+.section-icon {
+    width: 40px;
+    height: 40px;
+    background: var(--uni-light-blue);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+}
+
+.section-info {
+    flex: 1;
+}
+
+.section-info h4 {
+    margin: 0;
+    color: #1f2937;
+    font-weight: 600;
+}
+
+.section-info p {
+    margin: 4px 0 0;
+    color: #6b7280;
+    font-size: 14px;
+}
+
+.config-form, .generator-form {
+    padding: 24px;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-label {
+    font-weight: 500;
+    color: #374151;
+    margin-bottom: 8px;
+    font-size: 14px;
+}
+
+.form-control {
+    padding: 12px 16px;
+    border: 1px solid var(--uni-border);
+    border-radius: 8px;
+    font-size: 14px;
+    transition: all 0.2s;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: var(--uni-light-blue);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.input-group {
+    display: flex;
+    gap: 8px;
+}
+
+.input-group .form-control {
+    flex: 1;
+}
+
+.validation-feedback {
+    margin-top: 8px;
+    font-size: 13px;
+}
+
+.validation-status {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px;
+    background: var(--uni-gray);
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.status-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+}
+
+.form-actions, .generator-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+}
+
+.btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-primary {
+    background: var(--uni-light-blue);
+    color: white;
+}
+
+.btn-primary:hover {
+    background: var(--uni-blue);
+}
+
+.btn-success {
+    background: var(--uni-success);
+    color: white;
+}
+
+.btn-warning {
+    background: var(--uni-warning);
+    color: white;
+}
+
+.btn:disabled {
+    background: #9ca3af;
+    cursor: not-allowed;
+}
+
+.constancias-list {
+    padding: 24px;
+}
+
+.loading-state {
+    text-align: center;
+    padding: 40px;
+    color: #6b7280;
+}
+
+.constancia-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px;
+    border: 1px solid var(--uni-border);
+    border-radius: 8px;
+    margin-bottom: 12px;
+}
+
+.constancia-info h6 {
+    margin: 0;
+    color: #1f2937;
+}
+
+.constancia-info small {
+    color: #6b7280;
+}
+
+.constancia-actions {
+    display: flex;
+    gap: 8px;
+}
+
+@media (max-width: 768px) {
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .form-actions, .generator-actions {
+        flex-direction: column;
+    }
+}
+</style>
+
+<script>
+// Funciones de validación para configuración
+async function validarCodigoConfig() {
+    const codigo = document.getElementById('configCodigo').value;
+    const validacionDiv = document.getElementById('validacionCodigoConfig');
+    
+    if (!codigo || codigo.length < 8) {
+        validacionDiv.innerHTML = '<small class="text-warning">Ingresa un código válido</small>';
+        return;
+    }
+    
+    validacionDiv.innerHTML = '<small class="text-info"><i class="fas fa-spinner fa-spin"></i> Validando en portal UNI...</small>';
+    
+    try {
+        const response = await fetch('/api/validar-estudiante', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ codigo: codigo })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            const datos = result.datos_estudiante;
+            validacionDiv.innerHTML = `
+                <small class="text-success">
+                    <i class="fas fa-check-circle"></i> Estudiante validado en UNI<br>
+                    <strong>Nombre:</strong> ${datos.nombre || 'N/A'}<br>
+                    <strong>Carrera:</strong> ${datos.carrera || 'N/A'}
+                </small>
+            `;
+            
+            // Auto-completar si están vacíos
+            if (datos.nombre && !document.getElementById('configNombres').value) {
+                const nombres = datos.nombre.split(' ');
+                document.getElementById('configNombres').value = nombres.slice(0, 2).join(' ');
+                document.getElementById('configApellidos').value = nombres.slice(2).join(' ');
+            }
+        } else {
+            validacionDiv.innerHTML = `<small class="text-danger"><i class="fas fa-exclamation-circle"></i> ${result.error}</small>`;
+        }
+    } catch (error) {
+        validacionDiv.innerHTML = '<small class="text-danger">Error de conexión</small>';
+    }
+}
+
+async function validarDNIConfig() {
+    const dni = document.getElementById('configDNI').value;
+    const validacionDiv = document.getElementById('validacionDNIConfig');
+    
+    if (!dni || dni.length !== 8) {
+        validacionDiv.innerHTML = '<small class="text-warning">Ingresa un DNI válido (8 dígitos)</small>';
+        return;
+    }
+    
+    validacionDiv.innerHTML = '<small class="text-info"><i class="fas fa-spinner fa-spin"></i> Validando DNI...</small>';
+    
+    try {
+        const response = await fetch('/api/validar-dni', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ dni: dni })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            const datos = result.datos_persona;
+            validacionDiv.innerHTML = `
+                <small class="text-success">
+                    <i class="fas fa-check-circle"></i> DNI validado<br>
+                    <strong>Nombre:</strong> ${datos.nombre_completo || 'N/A'}
+                </small>
+            `;
+        } else {
+            validacionDiv.innerHTML = `<small class="text-danger"><i class="fas fa-exclamation-circle"></i> ${result.error}</small>`;
+        }
+    } catch (error) {
+        validacionDiv.innerHTML = '<small class="text-danger">Error de conexión</small>';
+    }
+}
+
+async function validarCompleto() {
+    const btnValidar = document.getElementById('btnValidarCompleto');
+    const btnGenerar = document.getElementById('btnGenerarConstancia');
+    
+    btnValidar.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Validando...';
+    btnValidar.disabled = true;
+    
+    // Validar ambos
+    await validarDNIConfig();
+    await validarCodigoConfig();
+    
+    // Habilitar generación si todo está bien
+    btnGenerar.disabled = false;
+    btnValidar.innerHTML = '<i class="fas fa-check-double"></i> Validado DNI + UNI';
+    btnValidar.className = 'btn btn-success';
+}
+
+async function generarConstanciaConfig() {
+    const formData = {
+        nombre: `${document.getElementById('configNombres').value} ${document.getElementById('configApellidos').value}`,
+        codigo: document.getElementById('configCodigo').value,
+        dni: document.getElementById('configDNI').value,
+        correo: document.getElementById('configCorreo').value,
+        carrera: document.getElementById('generatorCarrera').value,
+        ciclo: document.getElementById('generatorCiclo').value
+    };
+    
+    if (!formData.carrera || !formData.ciclo) {
+        alert('Por favor selecciona carrera y ciclo');
+        return;
+    }
+    
+    const btnGenerar = document.getElementById('btnGenerarConstancia');
+    btnGenerar.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generando...';
+    btnGenerar.disabled = true;
+    
+    try {
+        const response = await fetch('/api/generar-constancia', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(formData)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            alert('¡Constancia generada exitosamente!');
+            cargarConstancias();
+        } else {
+            alert(`Error: ${result.error}`);
+        }
+    } catch (error) {
+        alert('Error generando constancia');
+    } finally {
+        btnGenerar.innerHTML = '<i class="fas fa-cog"></i> Generar Constancia con RPA';
+        btnGenerar.disabled = false;
+    }
+}
+
+async function cargarConstancias() {
+    const listContainer = document.getElementById('constanciasList');
+    listContainer.innerHTML = '<div class="loading-state"><i class="fas fa-spinner fa-spin"></i> Cargando...</div>';
+    
+    try {
+        const response = await fetch('/api/obtener-seguimiento');
+        const result = await response.json();
+        
+        if (result.constancias && result.constancias.length > 0) {
+            let html = '';
+            result.constancias.forEach(constancia => {
+                html += `
+                    <div class="constancia-item">
+                        <div class="constancia-info">
+                            <h6>${constancia.documento}</h6>
+                            <small>${constancia.alumno} - ${constancia.fecha || 'N/A'}</small>
+                        </div>
+                        <div class="constancia-actions">
+                            <button class="btn btn-sm btn-primary" onclick="descargarConstancia('${constancia.id}')">
+                                <i class="fas fa-download"></i> Descargar
+                            </button>
+                            <button class="btn btn-sm btn-danger" onclick="eliminarConstancia('${constancia.id}')">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+            listContainer.innerHTML = html;
+        } else {
+            listContainer.innerHTML = '<div class="text-center p-4"><p>No hay constancias generadas</p></div>';
+        }
+    } catch (error) {
+        listContainer.innerHTML = '<div class="alert alert-danger">Error cargando constancias</div>';
+    }
+}
+
+async function descargarConstancia(id) {
+    try {
+        const response = await fetch(`/api/constancias/descargar/${id}`);
+        if (response.ok) {
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `constancia_${id}.pdf`;
+            a.click();
+            window.URL.revokeObjectURL(url);
+        } else {
+            alert('Error descargando constancia');
+        }
+    } catch (error) {
+        alert('Error descargando constancia');
+    }
+}
+
+async function eliminarConstancia(id) {
+    if (!confirm('¿Estás seguro de eliminar esta constancia?')) return;
+    
+    try {
+        const response = await fetch('/api/eliminar-constancia', {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ registro_id: id })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            alert('Constancia eliminada exitosamente');
+            cargarConstancias();
+        } else {
+            alert(`Error: ${result.error}`);
+        }
+    } catch (error) {
+        alert('Error eliminando constancia');
+    }
+}
+
+// Cargar datos iniciales
+document.addEventListener('DOMContentLoaded', function() {
+    cargarConstancias();
+});
+</script>

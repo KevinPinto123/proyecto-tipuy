@@ -179,34 +179,63 @@ def validar_dni():
 
 @app.route('/api/eliminar-constancia', methods=['DELETE'])
 def eliminar_constancia():
-    """Endpoint para eliminar constancia"""
+    """Endpoint para eliminar constancia y su archivo PDF"""
     try:
         data = request.json
         
-        registro_id = data.get('registro_id')
+        registro_id = data.get('registro_id') or data.get('id')
         
         if not registro_id:
             return jsonify({'error': 'ID de registro es requerido'}), 400
         
-        # Log de la eliminación
         print(f"🗑️ API: Eliminando constancia {registro_id}")
         
-        # Eliminar constancia
-        resultado = rpa_service.eliminar_constancia(registro_id)
+        # Buscar la constancia antes de eliminar para obtener el archivo
+        constancias = rpa_service.obtener_seguimiento()
+        constancia = next((c for c in constancias if c.get('id') == registro_id), None)
         
-        if resultado:
-            return jsonify({
-                'success': True,
-                'mensaje': 'Constancia eliminada exitosamente'
-            })
-        else:
+        if not constancia:
             return jsonify({
                 'success': False,
                 'error': 'Constancia no encontrada'
             }), 404
         
+        # Eliminar archivo PDF si existe
+        pdf_filename = constancia.get('documento') or constancia.get('Documento')
+        if pdf_filename:
+            possible_paths = [
+                os.path.join('autoridad_entrada', pdf_filename),
+                os.path.join('PDFs', pdf_filename),
+                os.path.join('constancias', pdf_filename)
+            ]
+            
+            for path in possible_paths:
+                if os.path.exists(path):
+                    try:
+                        os.remove(path)
+                        print(f"🗑️ Archivo PDF eliminado: {path}")
+                        break
+                    except Exception as e:
+                        print(f"⚠️ Error eliminando archivo {path}: {e}")
+        
+        # Eliminar registro del seguimiento
+        resultado = rpa_service.eliminar_constancia(registro_id)
+        
+        if resultado:
+            return jsonify({
+                'success': True,
+                'mensaje': 'Constancia y archivo eliminados exitosamente'
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'error': 'Error eliminando registro de seguimiento'
+            }), 500
+        
     except Exception as e:
         print(f"❌ API: Error eliminando constancia: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify({
             'success': False,
             'error': f'Error interno del servidor: {str(e)}'
@@ -246,28 +275,63 @@ def get_configuracion_content():
 def descargar_constancia_endpoint(constancia_id):
     """Endpoint para descargar constancia por ID"""
     try:
-        from flask import send_file
+        print(f"🔍 Buscando constancia para descargar: {constancia_id}")
         
         # Buscar la constancia en el seguimiento
         constancias = rpa_service.obtener_seguimiento()
-        constancia = next((c for c in constancias if c.get('id') == constancia_id), None)
+        print(f"📋 Constancias disponibles: {len(constancias)}")
+        
+        constancia = None
+        for c in constancias:
+            if c.get('id') == constancia_id:
+                constancia = c
+                break
         
         if not constancia:
-            return jsonify({'error': 'Constancia no encontrada'}), 404
+            print(f"❌ Constancia {constancia_id} no encontrada")
+            return jsonify({'error': f'Constancia {constancia_id} no encontrada'}), 404
         
-        # Buscar archivo PDF
+        print(f"✅ Constancia encontrada: {constancia}")
+        
+        # Buscar archivo PDF - múltiples estrategias
         pdf_filename = constancia.get('documento') or constancia.get('Documento')
         if not pdf_filename:
-            return jsonify({'error': 'Archivo PDF no especificado'}), 404
+            print("❌ Nombre de archivo PDF no especificado")
+            return jsonify({'error': 'Archivo PDF no especificado en registro'}), 404
         
-        # Buscar en autoridad_entrada primero
-        pdf_path = os.path.join('autoridad_entrada', pdf_filename)
-        if not os.path.exists(pdf_path):
-            # Buscar en PDFs si no está en autoridad_entrada
-            pdf_path = os.path.join('PDFs', pdf_filename)
+        print(f"📄 Buscando archivo: {pdf_filename}")
         
-        if not os.path.exists(pdf_path):
-            return jsonify({'error': 'Archivo PDF no encontrado'}), 404
+        # Buscar en múltiples ubicaciones
+        possible_paths = [
+            os.path.join('autoridad_entrada', pdf_filename),
+            os.path.join('PDFs', pdf_filename),
+            os.path.join('constancias', pdf_filename),
+            pdf_filename  # Ruta directa
+        ]
+        
+        pdf_path = None
+        for path in possible_paths:
+            if os.path.exists(path):
+                pdf_path = path
+                print(f"✅ Archivo encontrado en: {path}")
+                break
+        
+        if not pdf_path:
+            print(f"❌ Archivo no encontrado en ninguna ubicación: {possible_paths}")
+            return jsonify({
+                'error': f'Archivo PDF no encontrado: {pdf_filename}',
+                'searched_paths': possible_paths
+            }), 404
+        
+        # Verificar que el archivo sea accesible
+        try:
+            file_size = os.path.getsize(pdf_path)
+            print(f"📊 Tamaño del archivo: {file_size} bytes")
+        except Exception as e:
+            print(f"❌ Error accediendo al archivo: {e}")
+            return jsonify({'error': f'Error accediendo al archivo: {str(e)}'}), 500
+        
+        print(f"🚀 Enviando archivo: {pdf_path}")
         
         return send_file(
             pdf_path,
@@ -277,7 +341,10 @@ def descargar_constancia_endpoint(constancia_id):
         )
         
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        print(f"❌ Error en descarga: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': f'Error interno: {str(e)}'}), 500
 
 @app.route('/api/validar-uni', methods=['POST'])
 def validar_uni():

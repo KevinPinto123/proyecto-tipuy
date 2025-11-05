@@ -384,26 +384,26 @@ class RPAService:
             # Generar ID único
             registro_id = str(uuid.uuid4())[:8]
             
-            # Agregar nueva fila con información completa
+            # Agregar nueva fila con información completa (ORDEN CORRECTO)
             nueva_fila = [
-                registro_id,
-                datos_validados['nombre'],
-                datos_validados['codigo'],
-                datos_validados.get('dni', ''),
-                datos_validados.get('correo', ''),
-                datos_validados['carrera'],
-                datos_validados['ciclo'],
-                archivo_pdf,
-                "Enviado",
-                "Coordinador Académico",
-                "Pendiente",
-                datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                registro_id,                                    # 0: ID
+                datos_validados['nombre'],                      # 1: Alumno
+                datos_validados['codigo'],                      # 2: Código
+                datos_validados.get('dni', ''),               # 3: DNI
+                datos_validados.get('correo', ''),            # 4: Correo
+                datos_validados['carrera'],                    # 5: Carrera
+                datos_validados['ciclo'],                      # 6: Ciclo
+                archivo_pdf,                                   # 7: Documento (ARCHIVO PDF)
+                "Enviado",                                     # 8: Estado
+                "Coordinador Académico",                       # 9: Autoridad
+                "Pendiente",                                   # 10: Firma
+                datetime.now().strftime("%Y-%m-%d %H:%M:%S"),  # 11: Fecha
                 # Nuevas columnas de validación
-                "SÍ" if datos_validados.get('validado_uni') else "NO",
-                "SÍ" if datos_validados.get('validado_dni') else "NO",
-                datos_validados.get('fuente', 'input_usuario'),
-                datos_validados.get('facultad', ''),
-                datos_validados.get('estado_uni', '')
+                "SÍ" if datos_validados.get('validado_uni') else "NO",  # 12: UNI Validado
+                "SÍ" if datos_validados.get('validado_dni') else "NO",  # 13: DNI Validado
+                datos_validados.get('fuente', 'input_usuario'),         # 14: Fuente
+                datos_validados.get('facultad', 'FIEE'),                # 15: Facultad
+                datos_validados.get('estado_uni', 'Activo')             # 16: Estado UNI
             ]
             
             ws.append(nueva_fila)
@@ -421,32 +421,58 @@ class RPAService:
     def eliminar_constancia(self, registro_id):
         """Eliminar constancia del seguimiento y archivo PDF"""
         try:
+            print(f"🗑️ Eliminando constancia: {registro_id}")
+            
+            if not os.path.exists(self.excel_file):
+                print(f"❌ Archivo Excel no encontrado: {self.excel_file}")
+                return False
+            
             wb = openpyxl.load_workbook(self.excel_file)
             ws = wb.active
             
             # Buscar y eliminar registro
             fila_a_eliminar = None
             archivo_pdf = None
+            alumno_nombre = None
             
             for row_num, row in enumerate(ws.iter_rows(min_row=2), start=2):
                 if row[0].value == registro_id:
                     fila_a_eliminar = row_num
+                    alumno_nombre = row[1].value if len(row) > 1 else "Desconocido"
                     archivo_pdf = row[7].value if len(row) > 7 else None  # Columna Documento
+                    print(f"📋 Encontrado registro: {alumno_nombre} - {archivo_pdf}")
                     break
             
             if fila_a_eliminar:
                 # Eliminar fila del Excel
                 ws.delete_rows(fila_a_eliminar)
                 wb.save(self.excel_file)
+                print(f"✅ Registro eliminado del Excel: fila {fila_a_eliminar}")
                 
-                # Eliminar archivo PDF si existe
+                # Eliminar archivo PDF en múltiples ubicaciones
                 if archivo_pdf:
-                    pdf_path = os.path.join(self.pdf_folder, archivo_pdf)
-                    if os.path.exists(pdf_path):
-                        os.remove(pdf_path)
-                        print(f"✅ Archivo PDF eliminado: {archivo_pdf}")
+                    possible_paths = [
+                        os.path.join(self.pdf_folder, archivo_pdf),
+                        os.path.join('autoridad_entrada', archivo_pdf),
+                        os.path.join('PDFs', archivo_pdf),
+                        os.path.join('constancias', archivo_pdf)
+                    ]
+                    
+                    pdf_eliminado = False
+                    for pdf_path in possible_paths:
+                        if os.path.exists(pdf_path):
+                            try:
+                                os.remove(pdf_path)
+                                print(f"✅ Archivo PDF eliminado: {pdf_path}")
+                                pdf_eliminado = True
+                                break
+                            except Exception as e:
+                                print(f"⚠️ Error eliminando {pdf_path}: {e}")
+                    
+                    if not pdf_eliminado:
+                        print(f"⚠️ Archivo PDF no encontrado para eliminar: {archivo_pdf}")
                 
-                print(f"✅ Constancia eliminada: {registro_id}")
+                print(f"✅ Constancia eliminada completamente: {registro_id}")
                 return True
             else:
                 print(f"❌ Constancia no encontrada: {registro_id}")
@@ -469,16 +495,18 @@ class RPAService:
             for row in ws.iter_rows(min_row=2, values_only=True):
                 if row[0]:  # Si hay ID
                     constancias.append({
-                        'id': row[0],
-                        'alumno': row[1],
-                        'codigo': row[2],
-                        'carrera': row[3],
-                        'ciclo': row[4],
-                        'documento': row[5],
-                        'estado': row[6],
-                        'autoridad': row[7],
-                        'firma': row[8],
-                        'fecha': row[9]
+                        'id': row[0],           # 0: ID
+                        'alumno': row[1],       # 1: Alumno
+                        'codigo': row[2],       # 2: Código
+                        'dni': row[3] if len(row) > 3 else '',        # 3: DNI
+                        'correo': row[4] if len(row) > 4 else '',     # 4: Correo
+                        'carrera': row[5] if len(row) > 5 else '',    # 5: Carrera
+                        'ciclo': row[6] if len(row) > 6 else '',      # 6: Ciclo
+                        'documento': row[7] if len(row) > 7 else '',  # 7: Documento (PDF)
+                        'estado': row[8] if len(row) > 8 else '',     # 8: Estado
+                        'autoridad': row[9] if len(row) > 9 else '',  # 9: Autoridad
+                        'firma': row[10] if len(row) > 10 else '',    # 10: Firma
+                        'fecha': row[11] if len(row) > 11 else ''     # 11: Fecha
                     })
             
             return constancias

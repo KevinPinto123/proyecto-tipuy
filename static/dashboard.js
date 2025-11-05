@@ -696,20 +696,31 @@ async function loadConstanciasHistory() {
                 const gradient = gradientColors[index % gradientColors.length];
 
                 html += `
-                    <div style="background: ${gradient}; padding: 25px; border-radius: 16px; color: white; display: flex; justify-content: space-between; align-items: center;">
+                    <div style="background: ${gradient}; padding: 25px; border-radius: 16px; color: white; display: flex; justify-content: space-between; align-items: center; position: relative;">
                         <div style="flex: 1;">
                             <h5 style="margin: 0 0 8px; font-size: 18px; font-weight: 600;">${constancia.documento || 'Constancia de Matrícula'}</h5>
                             <p style="margin: 0 0 5px; opacity: 0.9;">${constancia.alumno}</p>
                             <small style="opacity: 0.8;">📅 ${constancia.fecha || 'Fecha no disponible'} • 🆔 ${constancia.codigo || 'N/A'}</small>
                         </div>
-                        <div style="display: flex; gap: 10px;">
+                        <div style="display: flex; gap: 8px; align-items: center;">
                             <button onclick="downloadConstanciaFromHistory('${constancia.id}')" 
-                                    style="padding: 10px 15px; background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white; border-radius: 8px; cursor: pointer; transition: all 0.3s;">
+                                    style="padding: 12px 16px; background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white; border-radius: 8px; cursor: pointer; transition: all 0.3s; display: flex; align-items: center; gap: 8px; font-weight: 500;"
+                                    onmouseover="this.style.background='rgba(255,255,255,0.3)'" 
+                                    onmouseout="this.style.background='rgba(255,255,255,0.2)'">
                                 <i class="fas fa-download"></i> Descargar
                             </button>
                             <button onclick="viewConstanciaDetails('${constancia.id}')" 
-                                    style="padding: 10px 15px; background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white; border-radius: 8px; cursor: pointer; transition: all 0.3s;">
+                                    style="padding: 12px 16px; background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white; border-radius: 8px; cursor: pointer; transition: all 0.3s; display: flex; align-items: center; gap: 8px; font-weight: 500;"
+                                    onmouseover="this.style.background='rgba(255,255,255,0.3)'" 
+                                    onmouseout="this.style.background='rgba(255,255,255,0.2)'">
                                 <i class="fas fa-eye"></i> Ver
+                            </button>
+                            <button onclick="confirmarEliminacion('${constancia.id}', '${constancia.alumno}', '${constancia.documento || 'Constancia'}')" 
+                                    style="padding: 12px; background: rgba(239, 68, 68, 0.8); border: 1px solid rgba(239, 68, 68, 0.9); color: white; border-radius: 8px; cursor: pointer; transition: all 0.3s; display: flex; align-items: center; justify-content: center; width: 44px; height: 44px;"
+                                    onmouseover="this.style.background='rgba(239, 68, 68, 1)'; this.style.transform='scale(1.05)'" 
+                                    onmouseout="this.style.background='rgba(239, 68, 68, 0.8)'; this.style.transform='scale(1)'"
+                                    title="Eliminar constancia">
+                                <i class="fas fa-trash-alt"></i>
                             </button>
                         </div>
                     </div>
@@ -1074,4 +1085,132 @@ async function loadTramites() {
 
 async function loadNotificaciones() {
     return `<div style="padding: 40px; text-align: center;"><h2>Notificaciones</h2><p>Centro de notificaciones</p></div>`;
+}
+
+// Función para confirmar eliminación con modal atractivo
+function confirmarEliminacion(constanciaId, nombreAlumno, nombreDocumento) {
+    const modalContent = `
+        <div style="text-align: center; padding: 30px;">
+            <div style="width: 80px; height: 80px; background: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 25px; color: white; font-size: 36px; animation: pulse 2s infinite;">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            
+            <h3 style="color: #1f2937; margin-bottom: 15px; font-size: 24px; font-weight: 700;">⚠️ Confirmar Eliminación</h3>
+            
+            <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 12px; padding: 20px; margin-bottom: 25px;">
+                <p style="color: #991b1b; margin: 0 0 10px; font-weight: 600;">¿Estás seguro de que deseas eliminar esta constancia?</p>
+                <div style="background: white; padding: 15px; border-radius: 8px; margin-top: 15px; text-align: left;">
+                    <p style="margin: 5px 0; color: #374151;"><strong>📄 Documento:</strong> ${nombreDocumento}</p>
+                    <p style="margin: 5px 0; color: #374151;"><strong>👤 Estudiante:</strong> ${nombreAlumno}</p>
+                    <p style="margin: 5px 0; color: #374151;"><strong>🆔 ID:</strong> ${constanciaId}</p>
+                </div>
+            </div>
+            
+            <div style="background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 8px; padding: 15px; margin-bottom: 25px;">
+                <p style="color: #856404; margin: 0; font-size: 14px;">
+                    <i class="fas fa-info-circle"></i> 
+                    <strong>Advertencia:</strong> Esta acción eliminará permanentemente el archivo PDF y el registro del sistema. No se puede deshacer.
+                </p>
+            </div>
+            
+            <div style="display: flex; gap: 15px; justify-content: center;">
+                <button onclick="closeModal()" 
+                        style="padding: 12px 24px; background: #6b7280; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 500; display: flex; align-items: center; gap: 8px; transition: all 0.3s;"
+                        onmouseover="this.style.background='#4b5563'" 
+                        onmouseout="this.style.background='#6b7280'">
+                    <i class="fas fa-times"></i> Cancelar
+                </button>
+                <button onclick="eliminarConstancia('${constanciaId}'); closeModal();" 
+                        style="padding: 12px 24px; background: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 500; display: flex; align-items: center; gap: 8px; transition: all 0.3s;"
+                        onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 25px rgba(255, 65, 108, 0.3)'" 
+                        onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
+                    <i class="fas fa-trash-alt"></i> Sí, Eliminar
+                </button>
+            </div>
+        </div>
+        
+        <style>
+            @keyframes pulse {
+                0% { transform: scale(1); }
+                50% { transform: scale(1.05); }
+                100% { transform: scale(1); }
+            }
+        </style>
+    `;
+    
+    showModal('Eliminar Constancia', modalContent);
+}
+
+// Función para eliminar constancia mejorada
+async function eliminarConstancia(constanciaId) {
+    try {
+        // Mostrar notificación de proceso
+        showNotification('🗑️ Eliminando constancia...', 'info');
+        
+        const response = await fetch('/api/eliminar-constancia', {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                registro_id: constanciaId,
+                id: constanciaId  // Enviar ambos por compatibilidad
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showNotification('✅ Constancia eliminada exitosamente', 'success');
+            
+            // Recargar el historial para reflejar los cambios
+            setTimeout(() => {
+                loadConstanciasHistory();
+            }, 1000);
+            
+        } else {
+            showNotification(`❌ Error: ${result.error}`, 'error');
+        }
+        
+    } catch (error) {
+        console.error('Error eliminando constancia:', error);
+        showNotification('❌ Error de conexión al eliminar', 'error');
+    }
+}
+
+// Mejorar función de descarga con mejor manejo de errores
+async function downloadConstanciaFromHistory(id) {
+    try {
+        showNotification('📥 Iniciando descarga...', 'info');
+        
+        // Crear URL de descarga
+        const downloadUrl = `/api/constancias/descargar/${id}`;
+        
+        // Verificar que el archivo existe antes de intentar descargar
+        const checkResponse = await fetch(downloadUrl, { method: 'HEAD' });
+        
+        if (!checkResponse.ok) {
+            if (checkResponse.status === 404) {
+                showNotification('❌ Archivo PDF no encontrado en el servidor', 'error');
+            } else {
+                showNotification(`❌ Error del servidor: ${checkResponse.status}`, 'error');
+            }
+            return;
+        }
+        
+        // Crear elemento de descarga
+        const link = document.createElement('a');
+        link.href = downloadUrl;
+        link.download = `constancia_${id}.pdf`;
+        link.style.display = 'none';
+        
+        // Agregar al DOM, hacer clic y remover
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        showNotification('✅ Descarga iniciada correctamente', 'success');
+        
+    } catch (error) {
+        console.error('Error en descarga:', error);
+        showNotification('❌ Error iniciando descarga', 'error');
+    }
 }
